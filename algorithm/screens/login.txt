@@ -1,0 +1,17 @@
+FUNCTION load_login_screen(screen):
+    print_welcome_message('Gelos Enterprises Login')
+    PRINT(CONCATENATE("\nTo be ", Colour('SUCCESSFUL', 'green', ['bold']), ' you must enter a valid username and password.\n'))
+
+    username = request_handle('get_username')
+    password = request_handle('get_password')
+
+    action_result = login(username, password)
+
+    IF action_result:
+        user_session.user_login(username, action_result)
+        load_screen('home')
+    ELSE:
+        message = 'Invalid username or password.'
+        print_error_message(message)
+        clear_screen(3)
+        load_screen('landing')

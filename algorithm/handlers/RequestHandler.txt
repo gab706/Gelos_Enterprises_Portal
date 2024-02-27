@@ -1,0 +1,29 @@
+CLASS RequestHandler:
+    FUNCTION __init__():
+        available_requests = {
+            'get_username': {'question': 'Enter your Gelos Enterprises Username'},
+            'get_password': {'question': 'Enter your Gelos Enterprises Password'},
+            'get_user': {'question': 'Enter the username of the user'},
+            'get_one_or_other': {'question': 'Enter your option',
+                                 'validation': LAMBDA x: x IN {'1', '2'}},
+            'get_auto_generate_chars': {'question': 'Enter your option',
+                                        'validation': LAMBDA x: ALL(DIGIT.ISDIGIT() AND 1 <= INT(DIGIT) <= 3
+                                                                    FOR DIGIT IN X.SPLIT())},
+            'get_auto_generate_length': {'question': 'Enter your desired length (Min. 1, Max. 20)',
+                                         'validation': LAMBDA x: X.ISDIGIT() AND 1 <= INT(X) <= 20},
+            'get_action_type': {'question': 'Enter what action you would like to do',
+                                'validation': LAMBDA x: INT(X) IF X.ISDIGIT() ELSE FALSE}
+        }
+
+    FUNCTION call_request(request_name):
+        request = available_requests.GET(request_name)
+
+        IF NOT request:
+            RAISE ValueError(f"Request {request_name} does not exist")
+
+        user_input = INPUT(CONCATENATE(request['question'], ": "))
+        validation_function = request.GET('validation')
+
+        IF validation_function IS NONE OR (CALLABLE(validation_function) AND validation_function(user_input)):
+            RETURN user_input
+        RETURN FALSE

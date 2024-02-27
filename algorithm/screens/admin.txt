@@ -1,0 +1,135 @@
+FUNCTION load_admin_screen(screen):
+    print_welcome_message(CONCATENATE('Welcome back ', user_session.username, ' to Gelos Admin\n'))
+
+    actions = ['View Users', 'Change User Password', 'Toggle Shadow Ban', 'Make User Admin', 'Go Back']
+
+    formatted_actions = []
+    FOR i FROM 0 TO LENGTH(actions) - 1:
+        formatted_actions.APPEND(Colour(CONCATENATE(i + 1, ". ", actions[i]), 'cyan', ['bold']))
+
+    actions_str = "\n".join(formatted_actions)
+
+    PRINT(CONCATENATE(actions_str, "\n"))
+
+    action_type = request_handle('get_action_type')
+
+    IF INT(action_type) > LENGTH(actions):
+        print_error_message(CONCATENATE(action_type, " is not a valid choice."))
+        clear_screen(3)
+        RETURN
+
+    user_chosen_action = actions[INT(action_type) - 1]
+
+    IF user_chosen_action == 'Go Back':
+        load_screen('home')
+    ELSE IF user_chosen_action == 'View Users':
+        view_users_action(screen)
+    ELSE IF user_chosen_action == 'Toggle Shadow Ban':
+        toggle_shadow_ban_action(screen)
+    ELSE IF user_chosen_action == 'Change User Password':
+        change_password_action(screen)
+    ELSE IF user_chosen_action == 'Make User Admin':
+        make_user_admin_action(screen)
+
+
+FUNCTION view_users_action(screen):
+    clear_screen()
+    print_welcome_message('Gelos Enterprises Accounts')
+    PRINT(CONCATENATE("\n", Colour('NOTE: ', 'purple', ['bold']), 'This page will auto redirect in 15 seconds\n'))
+
+    users = {user: data FOR user, data IN account_data.items() IF user.lower() != user_session.username.lower()}
+
+    PRINT(CONCATENATE(Colour('Normal User', 'green', ['bold']), ' - ', Colour('Shadow Banned', 'red', ['bold']), "\n"))
+
+    FOR EACH username, data IN users:
+        role = data['role']
+        PRINT(CONCATENATE(
+            Colour(username, 'red', []) IF role == '0' ELSE
+            Colour(CONCATENATE(username, ' (Admin)'), 'green', ['bold']) IF role == '2' ELSE
+            Colour(username, 'green', [])
+        ))
+
+    time.sleep(15)
+
+
+FUNCTION toggle_shadow_ban_action(screen):
+    clear_screen()
+    print_welcome_message('Gelos Enterprises Shadow Ban')
+    PRINT(CONCATENATE("\n\nShadow banning is a ", Colour('SERIOUS', 'red', ['bold', 'underline']), ' action, please ensure you have a valid reason.\n\n', Colour('NOTE: ', 'purple', ['bold']), 'This is a toggle action, so a shadow banned user will be unbanned and vice versa\n'))
+
+    user_to_toggle = request_handle('get_user')
+    user_data = account_data.get(user_to_toggle, {})
+
+    IF user_data.get('role') == '2':
+        print_error_message(CONCATENATE(user_to_toggle, " is an admin, you CANNOT ban admins."))
+        clear_screen(3)
+        RETURN
+
+    result = toggle_ban(user_to_toggle)
+    clear_screen()
+    print_welcome_message('Gelos Enterprises Shadow Ban\n')
+
+    IF result == '1':
+        PRINT(Colour(CONCATENATE(user_to_toggle, " is now banned"), 'red', ['bold']))
+    ELSE IF result == '0':
+        PRINT(Colour(CONCATENATE(user_to_toggle, " is now unbanned"), 'green', ['bold']))
+    ELSE:
+        PRINT(Colour(CONCATENATE(user_to_toggle, " is not a valid user. Please try again"), 'red', ['bold']))
+
+    clear_screen(3)
+
+
+FUNCTION change_password_action(screen):
+    clear_screen()
+    print_welcome_message('Gelos Enterprises Password Editor\n')
+    user = request_handle('get_user')
+
+    IF user NOT IN account_data:
+        print_error_message(CONCATENATE(user, " is not a valid user."))
+        clear_screen(3)
+        RETURN
+
+    IF account_data[user]['role'] == '2':
+        print_error_message(CONCATENATE(user, " is an admin, you CANNOT edit admins."))
+        clear_screen(3)
+        RETURN
+
+    PRINT(CONCATENATE("\n", Colour('1. Generate your own Password', 'cyan', ['bold']), "\n",
+                    Colour('2. Auto Generate Password', 'cyan', ['bold']), "\n"))
+
+    auto_generate_password = request_handle('get_one_or_other')
+    password = request_handle('get_password') IF auto_generate_password == '1' ELSE generate_random_password()
+
+    change_password(user, password)
+
+    PRINT(CONCATENATE("\n\n", Colour(CONCATENATE('Please save the new password for ', user, ': ', password), 'green', [])))
+    clear_screen(5)
+
+
+FUNCTION make_user_admin_action(screen):
+    clear_screen()
+    print_welcome_message('Gelos Enterprises Role Editor\n')
+    user = request_handle('get_user')
+
+    IF user NOT IN account_data:
+        print_error_message(CONCATENATE(user, " is not a valid user."))
+        clear_screen(3)
+        RETURN
+
+    IF account_data[user]['role'] == '2':
+        print_error_message(CONCATENATE(user, " is already an admin."))
+        clear_screen(3)
+        RETURN
+
+    PRINT(CONCATENATE("\nAre you absolutely sure you want to make ", user, " an admin, you ", ConsoleFormatter.colorize('CANNOT', 'red', ['bold']), " undo this"))
+    PRINT(CONCATENATE("\n", ConsoleFormatter.colorize('1. Yes', 'green', ['bold']), "\n", ConsoleFormatter.colorize('2. No', 'red', ['bold']), "\n"))
+
+    confirmation = request_handle('get_one_or_other')
+
+    IF confirmation == '1':
+        make_admin(user)
+        PRINT(ConsoleFormatter.colorize(CONCATENATE("\n", user, " is now an admin"), 'green', ['bold']))
+    ELSE:
+        PRINT(ConsoleFormatter.colorize(CONCATENATE("\nThe request to make ", user, " an admin has been cancelled"), 'red', ['bold']))
+
+    clear_screen(3)

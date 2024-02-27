@@ -1,0 +1,47 @@
+FUNCTION load_home_screen(screen):
+    clear_screen()
+    role = user_session.role
+    actions = {
+        '0': ['Logout'],
+        '1': ['Change Password', 'Logout'],
+        '2': ['Change Password', 'Manage Other Users', 'Logout']
+    }.get(role, [])
+
+    formatted_actions = []
+    FOR i FROM 0 TO LENGTH(actions) - 1:
+        formatted_actions.APPEND(Colour(CONCATENATE(i + 1, ". ", actions[i]), 'cyan', ['bold']))
+
+    actions_str = "\n".join(formatted_actions)
+
+    print_welcome_message(CONCATENATE('Welcome back ', user_session.username))
+    PRINT(CONCATENATE("\nTo better redirect you, you can do the following. \n\n", actions_str, "\n"))
+
+    action_type = request_handle('get_action_type')
+
+    IF INT(action_type) > LENGTH(actions):
+        print_error_message(CONCATENATE(action_type, " is not a valid choice."))
+        clear_screen(3)
+        RETURN
+
+    user_chosen_action = actions[INT(action_type) - 1]
+
+    IF user_chosen_action == 'Logout':
+        user_session.user_logout()
+        PRINT(CONCATENATE("\n\n", Colour('Logging you out . . .', 'green', ['bold']), "\n"))
+        clear_screen(3)
+        load_screen('landing')
+    ELSE IF user_chosen_action == 'Change Password':
+        PRINT(CONCATENATE("\n", Colour('1. Generate your own Password', 'cyan', ['bold']), "\n"
+                          CONCATENATE('2. Auto Generate Password', 'cyan', ['bold']), "\n"))
+
+        auto_generate_password = request_handle('get_one_or_other')
+
+        password = request_handle('get_password') IF auto_generate_password == '1' ELSE generate_random_password()
+
+        change_password(screen.user_session.username, password)
+
+        PRINT(CONCATENATE("\n\n", Colour(CONCATENATE('Please save your new password: ', password), 'green', [])))
+        clear_screen(5)
+        load_screen('home')
+    ELSE IF user_chosen_action == 'Manage Other Users':
+        load_screen('admin')

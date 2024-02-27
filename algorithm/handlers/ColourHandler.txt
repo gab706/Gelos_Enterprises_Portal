@@ -1,0 +1,42 @@
+ENUM Colour:
+    RED = 'red'
+    GREEN = 'green'
+    YELLOW = 'yellow'
+    BLUE = 'blue'
+    PURPLE = 'purple'
+    CYAN = 'cyan'
+    WHITE = 'white'
+
+ENUM Style:
+    BOLD = 'bold'
+    ITALIC = 'italic'
+    UNDERLINE = 'underline'
+    BLINK = 'blink'
+    INVERT = 'invert'
+
+CLASS ConsoleFormatter:
+    TEXT_COLOR = {
+        Colour.RED: '\033[91m',
+        Colour.GREEN: '\033[92m',
+        Colour.YELLOW: '\033[93m',
+        Colour.BLUE: '\033[94m',
+        Colour.PURPLE: '\033[95m',
+        Colour.CYAN: '\033[96m',
+        Colour.WHITE: '\033[97m',
+    }
+
+    TEXT_FORMAT = {
+        Style.BOLD: '\033[1m',
+        Style.ITALIC: '\033[3m',
+        Style.UNDERLINE: '\033[4m',
+        Style.BLINK: '\033[5m',
+        Style.INVERT: '\033[7m',
+    }
+
+    RESET = '\033[0m'
+
+    FUNCTION colorize(text, color=None, styles=None):
+        color_code = ConsoleFormatter.TEXT_COLOR.get(Colour(color.lower()), '')
+        style_codes = ''.join(ConsoleFormatter.TEXT_FORMAT.get(Style(style.lower()), '') for style in styles)
+        formatted_text = CONCATENATE(color_code, style_codes, text, ConsoleFormatter.RESET)
+        RETURN formatted_text

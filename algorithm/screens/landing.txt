@@ -1,0 +1,11 @@
+FUNCTION load_landing_screen(screen):
+    print_welcome_message('Welcome to Gelos Enterprises')
+    PRINT(CONCATENATE("\n", Colour('1. Login', 'cyan', ['bold']), "\n", Colour('2. Register', 'cyan', ['bold']), "\n"))
+
+    authenticate_type = request_handle('get_one_or_other')
+
+    IF NOT authenticate_type OR authenticate_type NOT IN ('1', '2'):
+        print_error_message('Invalid request type.')
+        RETURN clear_screen(3)
+
+    load_screen('login') IF authenticate_type == '1' ELSE load_screen('register')

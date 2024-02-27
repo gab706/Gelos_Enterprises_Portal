@@ -1,0 +1,64 @@
+CLASS GelosModel:
+    FUNCTION __init__(accounts_file):
+        IF NOT accounts_file:
+            RAISE ValueError('You must provide an accounts file')
+        self.accounts_file = accounts_file
+        self.account_data = {}
+        __read_accounts()
+
+    FUNCTION login(username, password):
+        __read_accounts()
+        RETURN account_data[username.lower()]['role'] IF account_data[username.lower()]['pwd'] == password ELSE False
+
+    FUNCTION signup(username, password):
+        __read_accounts()
+        IF username.lower() NOT IN account_data:
+            __write_account(username.lower(), password, '1')
+            RETURN '1'
+        RETURN False
+
+    FUNCTION change_password(username, new_password):
+        __read_accounts()
+        IF username.lower() IN account_data:
+            account_data[username.lower()]['pwd'] = new_password
+            WITH OPEN(self.accounts_file, 'w') AS file_handle:
+                FOR user, data IN account_data.ITEMS():
+                    file_handle.WRITE(f"{user} {data['pwd']} {data['role']}\n")
+            RETURN True
+
+    FUNCTION toggle_ban(username):
+        __read_accounts()
+        username_lower = username.lower()
+        IF username_lower IN account_data:
+            user_data = account_data[username_lower]
+            user_data['role'] = '0' IF user_data['role'] == '1' ELSE '1'
+            WITH OPEN(self.accounts_file, 'w') AS file_handle:
+                FOR user, data IN account_data.ITEMS():
+                    file_handle.WRITE(f"{user} {data['pwd']} {data['role']}\n")
+            RETURN '0' IF user_data['role'] == '1' ELSE '1'
+        RETURN False
+
+    FUNCTION make_admin(username):
+        __read_accounts()
+        username_lower = username.lower()
+        IF username_lower IN account_data:
+            user_data = account_data[username_lower]
+            user_data['role'] = '2'
+            WITH OPEN(self.accounts_file, 'w') AS file_handle:
+                FOR user, data IN account_data.ITEMS():
+                    file_handle.WRITE(f"{user} {data['pwd']} {data['role']}\n")
+
+    FUNCTION __read_accounts():
+        WITH OPEN(self.accounts_file, 'r') AS file_handle:
+            account_data = {
+                user: {'pwd': pwd, 'role': role}
+                FOR LINE IN MAP(STR.STRIP, file_handle)
+                IF (PARTS := LINE.SPLIT(' ', 2)) AND LEN(PARTS) == 3
+                FOR user, pwd, role IN [PARTS]
+            }
+
+    FUNCTION __write_account(username, password, role):
+        IF username.lower() IN account_data:
+            RAISE ValueError(f"{username} is already in use")
+        WITH OPEN(self.accounts_file, 'a') AS file_handle:
+            file_handle.WRITE(f"{username} {password} {role}\n")

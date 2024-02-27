@@ -1,0 +1,25 @@
+FUNCTION load_register_screen(screen):
+    print_welcome_message('Gelos Enterprises Register')
+    PRINT(CONCATENATE("\nTo be ", Colour('SUCCESSFUL', 'green', ['bold']), ' you must enter a unique username.\n'))
+
+    username = request_handle('get_username')
+
+    PRINT(CONCATENATE("\n", Colour('1. Generate your own Password', 'cyan', ['bold']), "\n",
+                    Colour('2. Auto Generate Password', 'cyan', ['bold']), "\n"))
+
+    auto_generate_password = request_handle('get_auto_generate_chars')
+    password = request_handle('get_password') IF auto_generate_password == '1' ELSE generate_random_password()
+
+    action_result = signup(username, password)
+
+    IF action_result:
+        user_session.user_login(username, action_result)
+        clear_screen()
+        print_welcome_message('Gelos Enterprises Register')
+        PRINT(CONCATENATE("\n\n", Colour(CONCATENATE('Please save your password: ', password), 'green', [])))
+        clear_screen(5)
+        load_screen('home')
+    ELSE:
+        print_error_message(CONCATENATE("Username ", username, " already exists."))
+        clear_screen(3)
+        load_screen('landing')

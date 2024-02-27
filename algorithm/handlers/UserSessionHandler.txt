@@ -1,0 +1,15 @@
+CLASS UserSession:
+    FUNCTION __init__():
+        logged_in = False  # Indicates whether a user is currently logged in
+        username = None  # Stores the username of the logged-in user
+        role = 0  # Stores the role/level of access for the logged-in user
+        current_screen = 'landing'  # Stores the current screen a user is viewing
+
+    FUNCTION set_current_screen(screen_name):
+        current_screen = screen_name.lower()
+
+    FUNCTION user_login(username, role):
+        logged_in, username, role = True, username.lower(), role
+
+    FUNCTION user_logout():
+        logged_in, username, role = False, None, 0

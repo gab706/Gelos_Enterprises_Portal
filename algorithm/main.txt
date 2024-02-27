@@ -1,0 +1,23 @@
+IMPORT sys
+FROM project.handlers.ColourHandler IMPORT Colour
+FROM project.handlers.GelosHandler IMPORT GelosModel
+FROM project.handlers.UserSessionHandler IMPORT UserSession
+FROM project.handlers.RequestHandler IMPORT RequestHandler
+FROM project.handlers.ScreenHandler IMPORT ScreenManager
+
+# Create instances of GelosModel, UserSession, RequestHandler, and ScreenManager
+gelos_model = GelosModel('accounts.txt')
+user_session = UserSession()
+request_handler = RequestHandler()
+screen_manager = ScreenManager(gelos_model, user_session, request_handler)
+
+# Main loop for continuously loading screens
+WHILE True:
+    TRY:
+        # Load the screen based on the current screen in the UserSession
+        screen_manager.load_screen(user_session.current_screen)
+    EXCEPT KeyboardInterrupt:
+        # Handle KeyboardInterrupt (Ctrl+C) to gracefully end the program
+        PRINT(f"\n\n{Colour('Ending Program. . .', 'green', ['bold'])}\n")
+        ScreenManager.clear_screen(2)
+        SYS.EXIT(0)

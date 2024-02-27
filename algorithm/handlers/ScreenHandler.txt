@@ -1,0 +1,53 @@
+CLASS ScreenManager:
+    FUNCTION __init__(gelos_model, user_session, request_handler):
+        gelos_model = gelos_model
+        user_session = user_session
+        request_handler = request_handler
+        screens = {
+            'login': load_login_screen,
+            'register': load_register_screen,
+            'landing': load_landing_screen,
+            'home': load_home_screen,
+            'admin': load_admin_screen
+        }
+
+    FUNCTION load_screen(screen_name):
+        clear_screen(0)
+        IF screen_name.lower() IN screens:
+            user_session.set_current_screen(screen_name.lower())
+            screens[screen_name.lower()](self)
+        ELSE:
+            RAISE ValueError(f"Screen {screen_name} not found.")
+
+    ###################
+    # Global Functions
+    ###################
+
+    FUNCTION generate_random_password():
+        clear_screen()
+        print_welcome_message('Gelos Enterprises Register')
+        allowed_chars = request_handler.call_request('get_auto_generate_chars')
+        auto_generate_length_permission = request_handler.call_request('get_one_or_other')
+        auto_generate_length = 10 IF auto_generate_length_permission == '1' ELSE request_handler.call_request(
+            'get_auto_generate_length')
+        password = __generate_random_password(allowed_chars, auto_generate_length)
+        RETURN password
+
+    FUNCTION print_welcome_message(msg):
+        PRINT ConsoleFormatter.colorize(msg, 'yellow', ['bold'])
+
+    FUNCTION print_error_message(msg):
+        PRINT ConsoleFormatter.colorize(f"\n{msg} Please try again.\n", 'red', ['bold'])
+
+    FUNCTION clear_screen(delay=None):
+        IF delay IS NOT NONE:
+            time.sleep(delay)
+        os.system('cls' IF os.name == 'nt' ELSE 'clear')
+
+    FUNCTION __generate_random_password(allowed_chars, length):
+        chars = ''.join([string.ascii_letters IF '1' IN allowed_chars ELSE '',
+                         string.digits IF '2' IN allowed_chars ELSE '',
+                         string.punctuation.replace(" ", "") IF '3' IN allowed_chars ELSE ''])
+        IF NOT chars:
+            RAISE ValueError('No valid characters selected.')
+        RETURN ''.join(random.choice(chars) FOR _ IN RANGE(INT(length)))
